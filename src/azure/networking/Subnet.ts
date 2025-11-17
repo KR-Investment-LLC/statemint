@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-import { Deployment } from "../../core/Deployment";
-import { IConfig } from "../../core/IConfig";
-import { Resource } from "../../core/Resource";
-import { IContext } from "../../runtime/Context";
-import { VirtualNetwork } from "./VirtualNetwork";
+import { Deployment } from "../../core/Deployment.js";
+import { IConfig } from "../../core/IConfig.js";
+import { IContext } from "../../runtime/Context.js";
+import { AzureResource } from "../AzureResource.js";
+import { VirtualNetwork } from "./VirtualNetwork.js";
 
 /**
  * 
@@ -38,9 +38,21 @@ export interface ISubnetConfig extends IConfig {
 /**
  * 
  */
-export class Subnet extends Resource<ISubnetConfig, VirtualNetwork> {
+export class Subnet extends AzureResource<ISubnetConfig, VirtualNetwork> {
     async handleValidateEvent(resource: this, deployment: Deployment, context: IContext): Promise<void> {
         if(!(this.parent instanceof VirtualNetwork))
             throw new Error(`Subnet must be a child of VirtualNetwork.`);
+    }
+
+    get path(): string {
+        return "subnets";
+    }
+
+    get apiVersion(): string {
+        return "2023-09-01";
+    }
+
+    get identifier(): string {
+        return this.alias;
     }
 }

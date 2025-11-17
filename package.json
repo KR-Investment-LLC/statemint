@@ -1,6 +1,6 @@
 {
   "name": "statemint",
-  "type": "commonjs",
+  "type": "module",
   "version": "1.0.0",
   "description": "TypeScript based cloud resource manager",
   "main": "index.js",
@@ -36,6 +36,7 @@
   },
   "homepage": "https://github.com/KR-Investment-LLC/stratoform#readme",
   "dependencies": {
+    "@clack/prompts": "^0.11.0",
     "@types/jest": "^30.0.0",
     "axios": "^1.12.2",
     "commander": "^14.0.1",

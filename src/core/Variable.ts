@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-import { IValidator } from "./IValidator"
-import { AsyncEventEmitter } from "./AsyncEventEmitter";
+import { IValidator } from "./IValidator.js"
+import { AsyncEventEmitter } from "./AsyncEventEmitter.js";
 
 export interface IVariableConfig<T> {
     defaultValue?: T ;

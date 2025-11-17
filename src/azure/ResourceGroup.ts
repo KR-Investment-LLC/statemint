@@ -22,12 +22,9 @@
  * SOFTWARE.
  */
 
-import { IConfig } from "../core/IConfig";
-import { Resource } from "../core/Resource";
-import { ResourceComposite } from "../core/ResourceComposite";
-import { 
-    Subscription
-} from "./Subscription";
+import { IConfig } from "../core/IConfig.js";
+import { AzureResource } from "./AzureResource.js";
+import { Subscription } from "./Subscription.js";
 
 /**
  * 
@@ -37,11 +34,23 @@ export interface IResourceGroupConfig extends IConfig {
 };
 
 
-export type ResourceGroupChild<C extends IConfig> = Resource<C, ResourceGroup> | ResourceComposite<C, Resource<C, ResourceGroup>, ResourceGroup>;
+export type ResourceGroupChild<CONFIG extends IConfig> = AzureResource<CONFIG, ResourceGroup, any>;
 
 /**
  * 
  */
-export class ResourceGroup extends ResourceComposite<IResourceGroupConfig, ResourceGroupChild<any>, Subscription> {
+export class ResourceGroup extends AzureResource<IResourceGroupConfig, Subscription, ResourceGroupChild<any>> {
     //
+
+    get path(): string {
+        return "resourcegroups";
+    }
+
+    get apiVersion(): string {
+        return "2022-09-01";
+    }
+
+    get identifier(): string {
+        return this.alias;
+    }
 }

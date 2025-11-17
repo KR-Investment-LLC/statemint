@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-import { AsyncEventEmitter } from "./AsyncEventEmitter";
-import { CompositeMap } from "./CompositeMap";
-import { Dependable, IDependable } from "./Dependable";
-import { Resource } from "./Resource";
-import { Variable } from "./Variable";
+import { IContext } from "../runtime/Context.js";
+import { AsyncEventEmitter } from "./AsyncEventEmitter.js";
+import { IDependable } from "./IDependable.js";
+import { AbstractResource } from "./AbstractResource.js";
+import { Variable } from "./Variable.js";
 
 export const DEPLOYMENT_VERSION = Symbol.for("Stratoform.Deployment/v1.0.0");
 
@@ -34,6 +34,10 @@ export const DEPLOYMENT_VERSION = Symbol.for("Stratoform.Deployment/v1.0.0");
  * Event names the base class uses 
  */
 export const DeploymentEvents = {
+    beforeDefine:     "beforeDefine"     as const,
+    define:           "define"           as const,
+    afterDefine:      "afterDefine"      as const,
+    definitionError:  "definitionError"  as const,
     beforeValidate:   "beforeValidate"   as const, 
     validate:         "validate"         as const,
     afterValidate:    "afterValidate"    as const,
@@ -55,17 +59,21 @@ export interface IDeploymentConfig {
     name?: string
 };
 
+export type DefineDeploymentListener<D extends Deployment<any>> = (self: D, context: IContext | never) => Promise<void> | void;
+
 /**
  * @description
  */
-export class Deployment<C extends IDeploymentConfig = IDeploymentConfig> extends AsyncEventEmitter implements IDependable {
+export class Deployment<C extends IDeploymentConfig = IDeploymentConfig> 
+        extends AsyncEventEmitter 
+        implements IDependable {
     public readonly [DEPLOYMENT_VERSION] = true;
 
-    private _resources               = new CompositeMap<this, Resource<any, any>>(this);
+    //private _resources               = new CompositeMap<this, Resource<any, any, any>>(this);
     private _inputs                  = new Map<string, Variable<any>>();
     private _outputs                 = new Map<string, Variable<any>>();
-    private _deployments             = new CompositeMap<this, Deployment>(this);
-    private _dependable:  Dependable = new Dependable();
+    //private _deployments             = new CompositeMap<this, Deployment>(this);
+    //private _dependable:  Dependable = new Dependable();
     private _alias:       string;
     private _config:      C;
 
@@ -93,22 +101,24 @@ export class Deployment<C extends IDeploymentConfig = IDeploymentConfig> extends
         this._config = config;
     }
 
-    deployResources(...resources: Resource<any, any>[]): this {
-        this._resources.deployDependents(...resources);
+    deployResources(...resources: AbstractResource<any, any, any>[]): this {
+        //this._resources.deployDependents(...resources);
         return this;
     }
 
-    deployResource(resource: Resource<any, any>): this {
-        this._resources.deployDependent(resource);
+    deployResource(resource: AbstractResource<any, any, any>): this {
+        //this._resources.deployDependent(resource);
         return this;
     }
 
-    getResource(alias: string, failIfUndefined: boolean = false): Resource<any, any> | undefined {
-        return this._resources.getDependent(alias, failIfUndefined);
+    getResource(alias: string, failIfUndefined: boolean = false): AbstractResource<any, any, any> | undefined {
+        //return this._resources.getDependent(alias, failIfUndefined);
+        return;
     }
 
-    get resources(): Iterable<Resource<any, any>> {
-        return this._resources.dependents;
+    get resources(): Iterable<AbstractResource<any, any, any>> {
+       // return this._resources.dependents;
+       return {} as Iterable<AbstractResource<any, any, any>>;
     }
 
     declareInput(variable: Variable<any>): this {
@@ -156,29 +166,51 @@ export class Deployment<C extends IDeploymentConfig = IDeploymentConfig> extends
     }
     
     linkDeployment(deployment: Deployment<any>): this {
-        this._deployments.deployDependent(deployment);
+        //this._deployments.deployDependent(deployment);
         return this;
     }
 
     linkDeployments(...deployments: Deployment<any>[]): this {
-        this._deployments.deployDependents(...deployments);
+        //this._deployments.deployDependents(...deployments);
         return this;
     }
 
     getDeployment(name: string, failIfUndefined: boolean  = false): Deployment<any> | undefined {
-        return this._deployments.getDependent(name, failIfUndefined);
+        //return this._deployments.getDependent(name, failIfUndefined);
+        return {} as Deployment<any> | undefined;
     }
 
     get deployments(): Iterable<Deployment<any>> {
-        return this._deployments.dependents;
+        //return this._deployments.dependents;
+        return {} as Iterable<Deployment<any>>
     }
 
     dependsOn(...items: IDependable[]): void {
-        this._dependable.dependsOn(...items);
+       // this._dependable.dependsOn(...items);
     }
 
     async ready(): Promise<void> {
-        return this._dependable.ready();
+        //return this._dependable.ready();
+    }
+
+    async emitDefineEvent(context: IContext) {
+        await this.emit(DeploymentEvents.beforeDefine, this, context);
+        await this.emit(DeploymentEvents.define,       this, context);
+        // Emit events for all the child deployments.
+        // for(const _deployment of this._deployments.dependents) {
+        //     await _deployment.emitDefineEvent(context);
+        // }
+        await this.emit(DeploymentEvents.afterDefine,  this, context);
+    }
+
+    async emitValidateEvent(context: IContext) {
+        await this.emit(DeploymentEvents.beforeValidate, this, context);
+        await this.emit(DeploymentEvents.validate,       this, context);
+        // Emit events for all the child deployments.
+        // for(const _deployment of this._deployments.dependents) {
+        //     await _deployment.emitDefineEvent(context);
+        // }
+        await this.emit(DeploymentEvents.afterValidate,  this, context);
     }
 
     /**
@@ -189,9 +221,9 @@ export class Deployment<C extends IDeploymentConfig = IDeploymentConfig> extends
      * @param fn 
      * @returns 
      */
-    static deploy<TR extends Deployment<any>, C>(this: new (alias: string, config: C) => TR, alias: string, config: C, fn?: (self: TR) => void | Promise<void> ): TR {
+    static define<TR extends Deployment<any>, C>(this: new (alias: string, config: C) => TR, alias: string, config: C, fn?: DefineDeploymentListener<TR>): TR {
         const _instance = new this(alias, config);
-        if(fn) _instance.on(DeploymentEvents.deploy, () => fn(_instance));
+        if(fn) _instance.on(DeploymentEvents.define, fn);
         return _instance;
     }
 

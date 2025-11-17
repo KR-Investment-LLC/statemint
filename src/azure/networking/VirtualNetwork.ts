@@ -22,11 +22,10 @@
  * SOFTWARE.
  */
 
-import { IConfig } from "../../core/IConfig";
-import { Resource } from "../../core/Resource";
-import { ResourceComposite } from "../../core/ResourceComposite";
-import { ResourceGroup } from "../ResourceGroup";
-import { Subnet } from "./Subnet";
+import { IConfig } from "../../core/IConfig.js";
+import { AzureResource } from "../AzureResource.js";
+import { ResourceGroup } from "../ResourceGroup.js";
+import { Subnet } from "./Subnet.js";
 
 /**
  * 
@@ -35,12 +34,12 @@ export interface IVirtualNetworkConfig extends IConfig {
     
 };
 
-export type ResourceGroupChild<C extends IConfig> = Resource<C, VirtualNetwork> | ResourceComposite<C, Resource<C, VirtualNetwork>, VirtualNetwork>;
+export type VirtualNetworkChild<C extends IConfig> = AzureResource<C, VirtualNetwork, any>;
 
 /**
  * 
  */
-export class VirtualNetwork  extends ResourceComposite<IVirtualNetworkConfig, ResourceGroupChild<any>, ResourceGroup>  {
+export class VirtualNetwork  extends AzureResource<IVirtualNetworkConfig, ResourceGroup, VirtualNetworkChild<any>>  {
 
     /**
      * @description 
@@ -48,6 +47,18 @@ export class VirtualNetwork  extends ResourceComposite<IVirtualNetworkConfig, Re
      * @returns 
      */
     deploySubnet(subnet: Subnet): this {
-        return this.deployDependent(subnet);
+        return this.deployChild(subnet);
+    }
+
+    get path(): string {
+        return "providers/Microsoft.Network/virtualNetworks";
+    }
+
+    get apiVersion(): string {
+        return "2023-09-01";
+    }
+
+    get identifier(): string {
+        return this.alias;
     }
 }

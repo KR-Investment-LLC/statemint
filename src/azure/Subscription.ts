@@ -22,10 +22,9 @@
  * SOFTWARE.
  */
 
-import { Deployment } from "../core/Deployment";
-import { IConfig } from "../core/IConfig";
-import { Resource } from "../core/Resource";
-import { ResourceComposite } from "../core/ResourceComposite";
+import { Deployment } from "../core/Deployment.js";
+import { IConfig } from "../core/IConfig.js";
+import { AzureResource } from "./AzureResource.js";
 
 /**
  * @description
@@ -39,15 +38,43 @@ export enum WorkloadType {
  * 
  */
 export interface ISubscriptionConfig extends IConfig {
+    name:          string
     workloadType?: WorkloadType
 }
-
-
-export type SubscriptionChildType<C extends IConfig> = Resource<C, Subscription> | ResourceComposite<C, Resource<C, Subscription>, Subscription>;
 
 /**
  * 
  */
-export class Subscription extends ResourceComposite<ISubscriptionConfig, SubscriptionChildType<any>, Deployment> {
-    //
+const DEFAULT_SUBSCRIPTION_CONFIG = {
+    workloadType: WorkloadType.Production
+} as ISubscriptionConfig;
+
+
+export type SubscriptionChildType<CONFIG extends IConfig> = AzureResource<CONFIG, Subscription, any>;
+
+/**
+ * 
+ */
+export class Subscription extends AzureResource<ISubscriptionConfig, Deployment<any>, SubscriptionChildType<any>> {
+    /**
+     * @description
+     * @param alias 
+     * @param config 
+     */
+    constructor(alias: string, config: ISubscriptionConfig) { 
+        super(alias, config);
+        // TODO: safely merge the passed-in config with the defaults, prefering user settings..
+    }
+
+    get path(): string {
+        return "subscriptions";
+    }
+
+    get apiVersion(): string {
+        return "2020-01-01";
+    }
+
+    get identifier(): string {
+        return this.config.id!;
+    }
 }

@@ -28,12 +28,13 @@ import fg from "fast-glob";
 import { 
     AsyncEventEmitter, 
     IAsyncEventEmitter 
-} from "../core/AsyncEventEmitter";
-import { IContext } from "./Context";
+} from "../core/AsyncEventEmitter.js";
+import { IContext } from "./Context.js";
 import { 
     Deployment, 
-    DEPLOYMENT_VERSION 
-} from "../core/Deployment";
+    DEPLOYMENT_VERSION, 
+    DeploymentEvents
+} from "../core/Deployment.js";
 
 /**
  * @description
@@ -146,8 +147,7 @@ export class BaseRuntime extends AsyncEventEmitter implements IRuntime {
             await this.loadDeployments();
             await this.emit(RuntimeEvents.afterLoadDeployments, this);
 
-            // start the event lifecycle.
-            // TODO: Loop through each deployment and asyn run the deploy function (dependsOn will handle all the)
+            
         }
         catch(err) {
             await this.emit(RuntimeEvents.runError, this, err);

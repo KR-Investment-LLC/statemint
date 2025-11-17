@@ -22,26 +22,19 @@
  * SOFTWARE.
  */
 
-export class Stack<T> {
-    private _items: Array<T> = [];
 
-    push(frame: T): void {
-        this._items.push(frame);
-    }
+/**
+ * 
+ */
+export interface IDependable {
+    /**
+     * 
+     * @param items 
+     */
+    dependsOn(...items: IDependable[]): void;
 
-    peek(): T | undefined {
-        return this._items[this._items.length - 1];
-    }
-
-    get isEmpty(): boolean {
-        return this._items.length === 0;
-    }
-
-    size(): number {
-        return this._items.length;
-    }
-
-    pop(): T | undefined {
-        return (this._items.length > 0)? this._items.pop() : undefined ;
-    }
+    /**
+     * 
+     */
+    ready(): Promise<void>;
 }

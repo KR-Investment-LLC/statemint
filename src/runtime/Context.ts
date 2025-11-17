@@ -23,10 +23,10 @@
  */
 
 import { Command }        from "commander";
-import { IRuntimeConfig } from "./RuntimeConfig";
+import { IRuntimeConfig } from "./RuntimeConfig.js";
 import { Logger } from "winston";
-import { getLogger } from "../core/Logger";
-import { Deployment } from "../core/Deployment";
+import { getLogger } from "../core/Logger.js";
+import { Deployment } from "../core/Deployment.js";
 
 /**
  * @description

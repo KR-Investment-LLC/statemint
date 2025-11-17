@@ -23,18 +23,18 @@
  * SOFTWARE.
  */
 
-import { displayStartBanner } from "./banner";
+import { displayStartBanner } from "./banner.js";
 import {
   IRuntimeConfig,
   loadConfig
-} from "./RuntimeConfig";
+} from "./RuntimeConfig.js";
 import { 
   Command, 
   Option 
 } from "commander";
 import path from "node:path";
-import { createContext, IContext } from "./Context";
-import { createRuntime } from "./Runtime";
+import { createContext, IContext } from "./Context.js";
+import { createRuntime } from "./Runtime.js";
 
 function parseKvpList(value: string) {
   const _pairs = value.split(",");
@@ -74,6 +74,7 @@ program
     .option("--unlock <alias>",              "Unlocks resource for delete or modification.")
     .option("--unlock-all",                  "Unlocks resources for delete or modification.",  false)
     .option("--working-directory <dir>",     "Unlocks resources for delete or modification.",  process.cwd())
+    .option("--validate",                    "Only Validate infrastructure state.",            false)
     .option("--variable-path <path>",        "Path to JSON variable file.")
     .option("--variables <k1=v1,k2=v2,...>", "Set multiple valriables by key=value.",          parseKvpList)
  

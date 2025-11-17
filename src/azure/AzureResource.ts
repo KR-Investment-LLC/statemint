@@ -22,30 +22,30 @@
  * SOFTWARE.
  */
 
-import { CompositeMap } from "./CompositeMap";
-import { Deployment } from "./Deployment";
-import { IComposite } from "./IComposite";
-import { IConfig } from "./IConfig";
-import { Resource } from "./Resource";
+import { Deployment } from "../core/Deployment.js";
+import { IConfig } from "../core/IConfig.js";
+import { AbstractResource } from "../core/AbstractResource.js";
 
-export abstract class ResourceComposite<C extends IConfig, D extends Resource<any, any>, P extends Resource<any, any> | Deployment| undefined = undefined> extends Resource<C, P> implements IComposite<D> {
-    private _composite = new CompositeMap<this, D>(this);
+export abstract class AzureResource<CONFIG extends IConfig, 
+                                    PARENT extends AbstractResource<any, any, any> | Deployment = never,
+                                    CHILD  extends AbstractResource<any, any, any> = never>
+        extends AbstractResource<CONFIG, PARENT, CHILD> {
+    public tags: Record<string, string> = {};
 
-    deployDependent(resource: D): this { 
-        this._composite.deployDependent(resource);
-        return this;
+    getTag(name: string): string {
+        return this.tags[name];
     }
 
-    deployDependents(...resources: D[]): this { 
-        this._composite.deployDependents(...resources);
-        return this;
+    setTag(name: string, value: string): void {
+        this.tags[name] = value;
     }
 
-    getDependent(alias: string, failIfUndefined: boolean = false):  D | undefined { 
-        return this._composite.getDependent(alias, failIfUndefined); 
-    }
+    get path():       string {return "";}
+    get apiVersion(): string {return "";}
 
-    get dependents(): Iterable<D> { 
-        return this._composite.dependents; 
+    abstract readonly identifier: string;
+
+    async uri(): Promise<string> {
+        return "";
     }
 }

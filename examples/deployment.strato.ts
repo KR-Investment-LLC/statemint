@@ -22,17 +22,22 @@
  * SOFTWARE.
  */
 
-import { Subnet } from "../src/azure/networking/Subnet";
-import { VirtualNetwork } from "../src/azure/networking/VirtualNetwork";
-import { ResourceGroup } from "../src/azure/ResourceGroup";
-import { Subscription, WorkloadType } from "../src/azure/Subscription";
-import { Deployment } from "../src/core/Deployment";
-import { Variable } from "../src/core/Variable";
+import { Subnet } from "../src/azure/networking/Subnet.js";
+import { VirtualNetwork } from "../src/azure/networking/VirtualNetwork.js";
+import { ResourceGroup } from "../src/azure/ResourceGroup.js";
+import { 
+    Subscription, 
+    WorkloadType 
+} from "../src/azure/Subscription.js";
+import { Deployment } from "../src/core/Deployment.js";
+import { Variable } from "../src/core/Variable.js";
+import { IContext } from "../src/runtime/Context.js";
 
-export default Deployment.deploy("MyApplicationInfrastructureDeployment", {}, 
-    (myApplicationInfrastructureDeployment) => {
-        myApplicationInfrastructureDeployment
-        .declareInputs(
+export default Deployment.define("MyApplicationInfrastructureDeployment", {}, 
+    (deployment: Deployment, context: IContext) => {
+        context.log.info(`Defining deployment '${deployment.alias}'...`);
+
+        deployment.declareInputs(
             Variable.declare<string>("environment", {
                 required: true
             }),
@@ -47,13 +52,13 @@ export default Deployment.deploy("MyApplicationInfrastructureDeployment", {},
             }, 
             (mySubscriptionOne: Subscription) => {
                 // add the first resource group.
-                mySubscriptionOne.deployDependents(
+                mySubscriptionOne.deployChildren(
                     ResourceGroup.deploy("MyResourceGroupOne", {
                             name: "my-resource-group-one-rg",
                         }, 
                         (myResourceGroupOne: ResourceGroup) => {        
                             // Add the VNET to resource group 1
-                            myResourceGroupOne.deployDependent(VirtualNetwork.deploy("MyVirtualNetworkOne", {
+                            myResourceGroupOne.deployChild(VirtualNetwork.deploy("MyVirtualNetworkOne", {
                                 name: "my-virtual-network-one-vnet"
                             },
                             (myVirtualNetworkOne: VirtualNetwork) => {
@@ -61,7 +66,7 @@ export default Deployment.deploy("MyApplicationInfrastructureDeployment", {},
                                 myVirtualNetworkOne.deploySubnet(Subnet.deploy("MyVirtualNetworkOneMainSubnet", {
                                     name: "main-subnet"
                                 }));
-                            }));
+                        }));
                     }),
                     ResourceGroup.deploy("MyResourceGroupTwo", {
                             name: "my-resource-group-two-rg",
@@ -69,8 +74,10 @@ export default Deployment.deploy("MyApplicationInfrastructureDeployment", {},
                         (myResourceGroupTwo: ResourceGroup) => {
                             // Add the VNET to resource group 1
                         },
-                        mySubscriptionOne.getDependent("MyResourceGroupOne", true)
+                        mySubscriptionOne.getChild("MyResourceGroupOne", true)
                     )
                 )
         }));
+
+        context.log.info(`Deployment '${deployment.alias}' defined.`);
 });

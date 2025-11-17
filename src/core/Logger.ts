@@ -31,7 +31,7 @@ import {
 import DailyRotateFile from "winston-daily-rotate-file";
 import type TransportStream from "winston-transport";
 import path from "path";
-import { IRuntimeConfig } from "../runtime/RuntimeConfig";
+import { IRuntimeConfig } from "../runtime/RuntimeConfig.js";
 
 const _transports: TransportStream[] = [];
 const _format     = format.combine(
